@@ -33,6 +33,7 @@ import static org.apache.http.HttpHeaders.CONTENT_LENGTH;
 import static org.apache.http.HttpHeaders.HOST;
 
 public class PrerenderSeoService {
+    public static final String ESCAPED_FRAGMENT_KEY = "_escaped_fragment_";
     private final static Logger log = LoggerFactory.getLogger(PrerenderSeoService.class);
     /**
      * These are the "hop-by-hop" headers that should not be copied.
@@ -41,15 +42,6 @@ public class PrerenderSeoService {
      * approach does case insensitive lookup faster.
      */
     private static final HeaderGroup hopByHopHeaders;
-    public static final String ESCAPED_FRAGMENT_KEY = "_escaped_fragment_";
-    private CloseableHttpClient httpClient;
-    private PrerenderConfig prerenderConfig;
-    private PreRenderEventHandler preRenderEventHandler;
-
-    public PrerenderSeoService(Map<String, String> config) {
-        this.prerenderConfig = new PrerenderConfig(config);
-        this.httpClient = getHttpClient();
-    }
 
     static {
         hopByHopHeaders = new HeaderGroup();
@@ -59,6 +51,15 @@ public class PrerenderSeoService {
         for (String header : headers) {
             hopByHopHeaders.addHeader(new BasicHeader(header, null));
         }
+    }
+
+    private CloseableHttpClient httpClient;
+    private PrerenderConfig prerenderConfig;
+    private PreRenderEventHandler preRenderEventHandler;
+
+    public PrerenderSeoService(Map<String, String> config) {
+        this.prerenderConfig = new PrerenderConfig(config);
+        this.httpClient = getHttpClient();
     }
 
     public void destroy() {
@@ -189,6 +190,11 @@ public class PrerenderSeoService {
             String url = request.getRequestURL().toString();
             return url.replace(request.getScheme(), prerenderConfig.getProtocol());
         }
+        if (StringUtils.isNotEmpty(prerenderConfig.getAppUrl())) {
+            String url = prerenderConfig.getAppUrl();
+            return String.format("%s://%s", request.getScheme(), url + request.getRequestURI());
+            //return String.format("%s://%s?%s", request.getScheme(), url+ request.getRequestURI(), request.getQueryString());
+        }
         return request.getRequestURL().toString();
     }
 
@@ -218,7 +224,7 @@ public class PrerenderSeoService {
             }
         }).toList();
     }
-    
+
     /**
      * Get the charset used to encode the http entity.
      */
@@ -235,7 +241,7 @@ public class PrerenderSeoService {
                     charset = param.getValue();
                 }
             }
-        }        
+        }
         return charset;
     }
 

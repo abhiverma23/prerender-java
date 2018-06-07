@@ -135,4 +135,9 @@ public class PrerenderConfig {
         final String prerenderServiceUrlInEnv = System.getProperty("PRERENDER_SERVICE_URL");
         return isNotBlank(prerenderServiceUrlInEnv) ? prerenderServiceUrlInEnv : PRERENDER_IO_SERVICE_URL;
     }
+
+    public String getAppUrl() {
+        final String appUrl = config.get("appUrl");
+        return isNotBlank(appUrl) ? appUrl : null;
+    }
 }
